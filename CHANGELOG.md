@@ -1,5 +1,91 @@
 # Changelog
 
+## [0.9.5](https://github.com/tiborsimko/reana-client/compare/v0.9.4...0.9.5) (2025-04-25)
+
+
+### Build
+
+* **appimage:** upgrade to Python 3.8.18 ([#704](https://github.com/tiborsimko/reana-client/issues/704)) ([783c17a](https://github.com/tiborsimko/reana-client/commit/783c17a97c265d0d3cfe97857dc414c6bd7c8b11))
+* **docker:** create `reana-client` container image ([#710](https://github.com/tiborsimko/reana-client/issues/710)) ([2c99c5d](https://github.com/tiborsimko/reana-client/commit/2c99c5d1bd36e4303885875375085f7d714e8732)), closes [#709](https://github.com/tiborsimko/reana-client/issues/709)
+* **python:** add support for Python 3.13 ([#736](https://github.com/tiborsimko/reana-client/issues/736)) ([fd9b944](https://github.com/tiborsimko/reana-client/commit/fd9b9446d58f21cc6e57b343874d55433532c959))
+* **python:** bump shared REANA packages as of 2024-11-28 ([#736](https://github.com/tiborsimko/reana-client/issues/736)) ([778df03](https://github.com/tiborsimko/reana-client/commit/778df037dbeb1340478060e7f913dfff7c0235e5))
+
+
+### Bug fixes
+
+* **status:** display correct duration of stopped workflows ([#701](https://github.com/tiborsimko/reana-client/issues/701)) ([b53def8](https://github.com/tiborsimko/reana-client/commit/b53def8dd3246b10d4da0f2367710af0911e284c)), closes [#699](https://github.com/tiborsimko/reana-client/issues/699)
+
+
+### Code refactoring
+
+* **docs:** move from reST to Markdown ([#703](https://github.com/tiborsimko/reana-client/issues/703)) ([c9c4d53](https://github.com/tiborsimko/reana-client/commit/c9c4d530eb3e1e3d6996fe71821116815c8eaba3))
+
+
+### Code style
+
+* **black:** format with black v24 ([#702](https://github.com/tiborsimko/reana-client/issues/702)) ([02dc830](https://github.com/tiborsimko/reana-client/commit/02dc83009a6477c1ae045f4e1a6ea9f9e66640fb))
+
+
+### Test suite
+
+* **snakemake:** allow running Snakemake 7 tests on Python 3.11+ ([#700](https://github.com/tiborsimko/reana-client/issues/700)) ([8ad7ff1](https://github.com/tiborsimko/reana-client/commit/8ad7ff19e98d1f9231af65bf608d408031546a3e)), closes [#655](https://github.com/tiborsimko/reana-client/issues/655)
+
+
+### Continuous integration
+
+* **actions:** pin setuptools 70 ([#728](https://github.com/tiborsimko/reana-client/issues/728)) ([0a4bcc7](https://github.com/tiborsimko/reana-client/commit/0a4bcc79af33dd00a6a03216be32d10000bb432b))
+* added flake8 linter ([2ea9df3](https://github.com/tiborsimko/reana-client/commit/2ea9df38ea6777893cd229901599fc4b66bdc573))
+* added system dependencies for graphviz support ([9d6d46b](https://github.com/tiborsimko/reana-client/commit/9d6d46b3b9e6e0b4098fe9f0d7d7b17a8f3997b7))
+* **commitlint:** addition of commit message linter ([#695](https://github.com/tiborsimko/reana-client/issues/695)) ([2de7d61](https://github.com/tiborsimko/reana-client/commit/2de7d61db96693e8ee9c3ac555aef9dbfd7bb4bc))
+* **commitlint:** allow release commit style ([#708](https://github.com/tiborsimko/reana-client/issues/708)) ([f552752](https://github.com/tiborsimko/reana-client/commit/f55275296cd6cc72b4d21d89f51442842cb15d30))
+* **commitlint:** check for the presence of concrete PR number ([#698](https://github.com/tiborsimko/reana-client/issues/698)) ([fa5b7c7](https://github.com/tiborsimko/reana-client/commit/fa5b7c76eb25bfb1591e6fae4a142d975e14b937))
+* do not use `-I` when installing dependencies ([e717555](https://github.com/tiborsimko/reana-client/commit/e7175559735eb226662c47f67ec72993d16f573d))
+* pin ubuntu version in GA jobs ([e68fb9f](https://github.com/tiborsimko/reana-client/commit/e68fb9fc7602d2d1e94b22386a13ce5a9af991df))
+* **pytest:** install `tests` package variant instead of `all` ([#703](https://github.com/tiborsimko/reana-client/issues/703)) ([fe0b00a](https://github.com/tiborsimko/reana-client/commit/fe0b00af1ad7b79ec607de7b810f597a3d6df93a))
+* **release-please:** initial configuration ([#695](https://github.com/tiborsimko/reana-client/issues/695)) ([5b278f1](https://github.com/tiborsimko/reana-client/commit/5b278f131b59d3ecfd3c7f129040a126cd01b60a))
+* remove six from python-tests job ([2cb42c5](https://github.com/tiborsimko/reana-client/commit/2cb42c5a6c8c6bedc6c6f8321fc29f7e428ad5fb))
+* revert back docs.reana.io CLI API check ([b8d893d](https://github.com/tiborsimko/reana-client/commit/b8d893dc8049f439cc060d78ba0527d333ac9cd7))
+* **runners:** upgrade CI runners to Ubuntu 22.04 ([#741](https://github.com/tiborsimko/reana-client/issues/741)) ([639992a](https://github.com/tiborsimko/reana-client/commit/639992a3c13a3b601541f0a04c48afd33008ac62))
+* **shellcheck:** fix exit code propagation ([#698](https://github.com/tiborsimko/reana-client/issues/698)) ([fe696ea](https://github.com/tiborsimko/reana-client/commit/fe696eae4cef119b29784ab80ec03d3f4cc089ea))
+* update all actions ([c9cb332](https://github.com/tiborsimko/reana-client/commit/c9cb3328b9bd4d219f86907199cff432c619d87a))
+* use Python 3.12 stable release ([dcd415f](https://github.com/tiborsimko/reana-client/commit/dcd415fe08b06b486f968086869fc91b0d58483d))
+
+
+### Documentation
+
+* add .readthedocs.yaml to migrate to RTD v2 ([f2efcc5](https://github.com/tiborsimko/reana-client/commit/f2efcc5196d20a9680c49b946f60f3df542729ee))
+* add interactive session screenshot ([2564206](https://github.com/tiborsimko/reana-client/commit/256420656f8201ad5d81295c357b6cf35725b681))
+* add script to generate cli api docs ([44811f7](https://github.com/tiborsimko/reana-client/commit/44811f7f8b3f4af5711fb3813182d4d9638437fb))
+* added get_workflow_logs function under rest API docs section ([58ae79b](https://github.com/tiborsimko/reana-client/commit/58ae79bee36dd7ba51b6d609e0769d206955ccd9))
+* added more functions under rest API docs section ([d36de00](https://github.com/tiborsimko/reana-client/commit/d36de00b2b2f748de0bcc19cbb163c9ed2ec00f2))
+* adding commands summary from `--help` ([a72be53](https://github.com/tiborsimko/reana-client/commit/a72be53d54a1027aa0dd69a98a077d145f909459))
+* adds serial partial execution example ([88df3fa](https://github.com/tiborsimko/reana-client/commit/88df3fa5554e6e96ed531523c2106bcde03525d6))
+* author ORCID links ([81b3d9f](https://github.com/tiborsimko/reana-client/commit/81b3d9fb5f0f5f82f9f46f202da93774e3bdd0f7))
+* **authors:** complete list of contributors ([#705](https://github.com/tiborsimko/reana-client/issues/705)) ([875997c](https://github.com/tiborsimko/reana-client/commit/875997c06e657d3e19e1af32324127caa2b1a9c5))
+* autoload client methods and add missing parameter descriptions ([5fc10fb](https://github.com/tiborsimko/reana-client/commit/5fc10fbba5ab26d6070339e4172ac2847ddfabca))
+* **cli:** fix `open` command documentation typo ([#728](https://github.com/tiborsimko/reana-client/issues/728)) ([c822dd6](https://github.com/tiborsimko/reana-client/commit/c822dd6570d5474e535be83d0ee4beb44ecee85b))
+* cmd example fix for cwl partial execution ([3a26ab7](https://github.com/tiborsimko/reana-client/commit/3a26ab77627145014069878a562ecc9e9bc070c9))
+* document serial CACHING parameter ([73dd36a](https://github.com/tiborsimko/reana-client/commit/73dd36a31765c4818f7b70e8fd03eb783e74583e))
+* harmonise example file names ([0dac57a](https://github.com/tiborsimko/reana-client/commit/0dac57ac52cffaba475b642fc85a22bc73b39c56))
+* harmonise REANA_WORKON name in help ([94cab3c](https://github.com/tiborsimko/reana-client/commit/94cab3cdfa7f6edf43a4ff1418336e4c0ad72de7))
+* ineractive session userguide + kubernetes update. ([b2e1b1d](https://github.com/tiborsimko/reana-client/commit/b2e1b1d1112b0b9879558c1ab554c4ff0eab7638))
+* more advice on access tokens ([d303c58](https://github.com/tiborsimko/reana-client/commit/d303c58d7c09f43aa8fe0c32d9638bc8004b3a27))
+* new logo, panel verbiage and links ([284cb18](https://github.com/tiborsimko/reana-client/commit/284cb188c35bcb3c769f8586d083c0ca9d70e8f7))
+* reanmes HTCONDORCERN* vars to CERN* ([eee648b](https://github.com/tiborsimko/reana-client/commit/eee648b23559be56caa00a1c36f637e39e6577f8))
+* remove non-autogenerated sections ([f15e4c7](https://github.com/tiborsimko/reana-client/commit/f15e4c705ba1e21ac878be401fe60fb6eaf5fb4e))
+* remove reana-cluster references ([9d6976f](https://github.com/tiborsimko/reana-client/commit/9d6976f757093d3a95fce81c7907d6d8c4375b04))
+* renaming workflows cmd to list ([ab17a8d](https://github.com/tiborsimko/reana-client/commit/ab17a8d15d42b93e25e6200d21d3822ed0fb3094))
+* rendering fix & rephrasing of interactive sessions ([e9e1e2d](https://github.com/tiborsimko/reana-client/commit/e9e1e2dfa9d01690f98fda8e03740977eea248b9))
+* rendering fixes ([070f206](https://github.com/tiborsimko/reana-client/commit/070f206f93dbb3ab641329dc61b39bf78b6edd99))
+* revert cli api docs autogeneration ([d22d5f3](https://github.com/tiborsimko/reana-client/commit/d22d5f3178b84e0896c9e4191ba1a2a7ca072d86))
+* secrets example for HTCondorCERN ([fcee100](https://github.com/tiborsimko/reana-client/commit/fcee100d90609c75b4f9beb2e12b1f41bb669718))
+* section for upload and download wrappers ([6dfe48a](https://github.com/tiborsimko/reana-client/commit/6dfe48adb33a9c3dc2dfa6d8801820f01f0e30ff))
+* set default language to English ([821931e](https://github.com/tiborsimko/reana-client/commit/821931ef3cc8c2508b3f989d009263c944da772e))
+* single-page RTFD outline ([cd9045a](https://github.com/tiborsimko/reana-client/commit/cd9045af6b5a1b708545d9f0d755bdc37992ec6d))
+* update changelog ([ac7867c](https://github.com/tiborsimko/reana-client/commit/ac7867c08c519d1a70ccd54a940b45076d3382a7))
+* update instructions for latest rc version ([a6df2f2](https://github.com/tiborsimko/reana-client/commit/a6df2f27daf8978866d6a802ed32769029df5be0))
+* virtualenv instead of mkvirtualenv ([4422c17](https://github.com/tiborsimko/reana-client/commit/4422c1754fe624ceae5f7c50f904bfb413c22767))
+
 ## [0.9.4](https://github.com/reanahub/reana-client/compare/0.9.3...0.9.4) (2024-11-29)
 
 
