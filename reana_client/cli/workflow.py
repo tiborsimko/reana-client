@@ -33,12 +33,18 @@ from reana_client.cli.utils import (
     requires_environments,
     retrieve_workflow_logs,
     follow_workflow_logs,
+    parse_workflow_run_number,
+    get_run_number_major_key,
+    format_run_number_label,
+    format_run_label_list,
 )
 from reana_client.config import (
     ERROR_MESSAGES,
     RUN_STATUSES,
     TIMECHECK,
     CLI_LOGS_FOLLOW_DEFAULT_INTERVAL,
+    MAX_RUN_LABELS_SHOWN,
+    CLI_WORKFLOWS_LIST_MAX_RESULTS,
 )
 from reana_client.printer import display_message
 from reana_client.utils import (
@@ -95,7 +101,7 @@ def workflow_sharing_group(ctx):
     "_format",
     multiple=True,
     help="Format output according to column titles or column values. "
-    "Use `<columm_name>=<column_value>` format. "
+    "Use `<column_name>=<column_value>` format. "
     "E.g. display workflow with failed status and named test_workflow "
     "`--format status=failed,name=test_workflow`.",
 )
@@ -132,7 +138,7 @@ def workflow_sharing_group(ctx):
     "filters",
     multiple=True,
     help="Filter workflow that contains certain filtering criteria. "
-    "Use `--filter <columm_name>=<column_value>` pairs. "
+    "Use `--filter <column_name>=<column_value>` pairs. "
     "Available filters are ``name`` and ``status``.",
 )
 @click.option(
@@ -1262,6 +1268,15 @@ def workflow_run(
     help="Delete all runs of a given workflow.",
 )
 @click.option(
+    "--include-all-restarts",
+    "include_all_restarts",
+    is_flag=True,
+    help=(
+        "Delete all restarted runs that share the same workspace as the selected run. "
+        "Without this flag, deletion will fail if the run is part of a restart chain."
+    ),
+)
+@click.option(
     "--include-workspace",
     "should_delete_workspace",
     is_flag=True,
@@ -1271,8 +1286,13 @@ def workflow_run(
 @add_access_token_options
 @check_connection
 @click.pass_context
-def workflow_delete(
-    ctx, workflow: str, all_runs: bool, should_delete_workspace: bool, access_token: str
+def workflow_delete(  # noqa: C901
+    ctx,
+    workflow: str,
+    all_runs: bool,
+    include_all_restarts: bool,
+    should_delete_workspace: bool,
+    access_token: str,
 ):  # noqa: D301
     """Delete a workflow.
 
@@ -1285,7 +1305,11 @@ def workflow_delete(
     \t $ reana-client delete -w myanalysis.42\n
     \t $ reana-client delete -w myanalysis.42 --include-all-runs
     """
-    from reana_client.api.client import delete_workflow
+    from reana_client.api.client import (
+        delete_workflow,
+        get_workflow_status,
+        get_workflows,
+    )
     from reana_client.utils import get_api_url
 
     should_delete_workspace = True
@@ -1297,14 +1321,179 @@ def workflow_delete(
     if workflow:
         try:
             logging.info("Connecting to {0}".format(get_api_url()))
-            delete_workflow(workflow, all_runs, should_delete_workspace, access_token)
+
+            # If deleting all runs, keep existing behavior (including restarts)
             if all_runs:
-                message = "All workflows named '{}' have been deleted.".format(
-                    workflow.split(".")[0]
+                response = delete_workflow(
+                    workflow, all_runs, should_delete_workspace, access_token
                 )
+                base_name, _, _ = parse_workflow_run_number(workflow)
+                workflow_base = base_name or workflow
+                message = response.get(
+                    "message"
+                ) or "All workflows named '{}' have been deleted.".format(workflow_base)
+                display_message(message, msg_type="success")
+                return
             else:
-                message = get_workflow_status_change_msg(workflow, "deleted")
-            display_message(message, msg_type="success")
+                wf_status = get_workflow_status(workflow, access_token) or {}
+                full_name = wf_status.get("name") or workflow
+                wf_id = wf_status.get("id")  # may be None
+
+                # If already deleted, do not delete again
+                if wf_status.get("status") == "deleted":
+                    display_message(
+                        f"Workflow run '{full_name}' is already deleted.",
+                        msg_type="info",
+                    )
+                    return
+
+                base_name, _, _ = parse_workflow_run_number(full_name)
+                major_key = get_run_number_major_key(full_name)
+                related_runs = []
+                if base_name and major_key:
+                    # List non-deleted runs of this workflow name, keep only same workspace group/number
+                    status_filter = RUN_STATUSES.copy()
+                    if "deleted" in status_filter:
+                        status_filter.remove("deleted")
+                    runs = get_workflows(
+                        access_token=access_token,
+                        type="batch",
+                        page=1,
+                        size=CLI_WORKFLOWS_LIST_MAX_RESULTS,
+                        status=status_filter,
+                        workflow=base_name,
+                    )
+                    related_runs = [
+                        r
+                        for r in (runs or [])
+                        if get_run_number_major_key(r.get("name")) == major_key
+                    ]
+
+                has_restart_series = len(related_runs) > 1
+                if has_restart_series and not include_all_restarts:
+                    labels = [
+                        format_run_number_label(r.get("name")) for r in related_runs
+                    ]
+                    display_message(
+                        "Cannot delete workflow run '{}': it is part of a restart series. "
+                        "Restarted runs share the same workspace, so deleting one run would remove the "
+                        "shared workspace and leave other runs in an inconsistent state.\n"
+                        "Related runs: {}\n"
+                        "Rerun the command with --include-all-restarts to delete this run and its restarts.".format(
+                            full_name,
+                            format_run_label_list(labels, MAX_RUN_LABELS_SHOWN),
+                        ),
+                        msg_type="error",
+                    )
+                    sys.exit(1)
+
+                if has_restart_series and include_all_restarts:
+                    active_related_runs = [
+                        r
+                        for r in related_runs
+                        if (
+                            (wf_id and r.get("id") != wf_id)
+                            or (not wf_id and r.get("name") != full_name)
+                        )
+                        and r.get("status")
+                        in {"created", "pending", "queued", "running"}
+                    ]
+                    if active_related_runs:
+                        active_labels = [
+                            format_run_number_label(r.get("name"))
+                            for r in active_related_runs
+                        ]
+                        display_message(
+                            "Cannot delete workflow run '{}': some related restarts are still active. "
+                            "Active runs: {}\n"
+                            "Wait until they finish or stop them first, then retry.".format(
+                                full_name,
+                                format_run_label_list(
+                                    active_labels, MAX_RUN_LABELS_SHOWN
+                                ),
+                            ),
+                            msg_type="error",
+                        )
+                        sys.exit(1)
+
+                    # Delete the selected run first, then continue through the
+                    # restart series and report any failures together at the end
+                    workflow_id_or_name = wf_id or full_name
+                    primary_id = wf_id
+                    primary_name = full_name
+                    deleted_labels = []
+                    failed_deletions = []
+
+                    try:
+                        delete_workflow(workflow_id_or_name, False, True, access_token)
+                        deleted_labels.append(format_run_number_label(full_name))
+                    except Exception as e:
+                        logging.debug(traceback.format_exc())
+                        logging.debug(str(e))
+                        failed_deletions.append(
+                            (format_run_number_label(full_name), str(e))
+                        )
+
+                    for r in related_runs:
+                        rid = r.get("id")
+                        rname = r.get("name")
+                        if (primary_id and rid == primary_id) or (
+                            rname == primary_name
+                        ):
+                            continue
+
+                        try:
+                            delete_workflow(rid or rname, False, False, access_token)
+                            deleted_labels.append(format_run_number_label(rname))
+                        except Exception as e:
+                            logging.debug(traceback.format_exc())
+                            logging.debug(str(e))
+                            failed_deletions.append(
+                                (format_run_number_label(rname), str(e))
+                            )
+
+                    if failed_deletions:
+                        failed_labels = [label for label, _ in failed_deletions]
+                        deleted_runs_message = (
+                            format_run_label_list(deleted_labels, MAX_RUN_LABELS_SHOWN)
+                            if deleted_labels
+                            else "none"
+                        )
+                        display_message(
+                            "Workflow run '{}' could not be fully deleted.\n"
+                            "Deleted runs: {}\n"
+                            "Failed runs: {}\n"
+                            "First error: {}\n"
+                            "Retry deleting the failed run(s) with --include-all-restarts.".format(
+                                full_name,
+                                deleted_runs_message,
+                                format_run_label_list(
+                                    failed_labels, MAX_RUN_LABELS_SHOWN
+                                ),
+                                failed_deletions[0][1],
+                            ),
+                            msg_type="error",
+                        )
+                        sys.exit(1)
+
+                    labels = [
+                        format_run_number_label(r.get("name")) for r in related_runs
+                    ]
+                    display_message(
+                        "Workflow run '{}' including its restarts have been deleted ({}).".format(
+                            full_name,
+                            format_run_label_list(labels, MAX_RUN_LABELS_SHOWN),
+                        ),
+                        msg_type="success",
+                    )
+                    return
+
+                # Normal single workflow run delete (no restarts)
+                delete_workflow(full_name, False, should_delete_workspace, access_token)
+                display_message(
+                    get_workflow_status_change_msg(full_name, "deleted"),
+                    msg_type="success",
+                )
 
         except Exception as e:
             logging.debug(traceback.format_exc())
@@ -1671,7 +1860,7 @@ def share_workflow_remove(ctx, workflow, access_token, users):  # noqa D412
     multiple=True,
     default=None,
     help="Format output according to column titles or column "
-    "values. Use <columm_name>=<column_value> format.",
+    "values. Use <column_name>=<column_value> format.",
 )
 @click.option(
     "--json",
